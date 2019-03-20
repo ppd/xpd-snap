@@ -1,0 +1,93 @@
+name: xpd
+base: core18
+summary: eXtended Parameter Designer
+icon: xpd.svg
+version: '0.4.1a~svn60'
+description: |
+  This program was developed to be a drop-in cross-platform replacement for the widely known in close circles Parameter Design tool (also known as Keywin-Bike Lab), used toset the parameters of a e-bike controller based on Infineon XC846 microcontroller (and various clones)
+
+grade: devel 
+confinement: strict
+
+plugs:
+  gnome-3-26-1604: # will be replaced by gnome extension
+    interface: content
+    target: gnome-platform
+    default-provider: gnome-3-26-1604:gnome-3-26-1604
+  gtk-2-engines:
+    interface: content
+    target: $SNAP/lib/gtk-2.0
+    default-provider: gtk2-common-themes:gtk-2-engines
+  gtk-2-themes:
+    interface: content
+    target: $SNAP/share/themes
+    default-provider: gtk2-common-themes:gtk-2-themes
+  icon-themes:
+    interface: content
+    target: $SNAP/share/icons
+    default-provider: gtk-common-themes:icon-themes
+
+apps:
+  xpd:
+    command: desktop-launch xpd
+    desktop: share/applications/xpd.desktop
+    environment:
+      GTK_PATH: $SNAP/lib/gtk-2.0
+      GTK_DATA_PREFIX: $SNAP
+      XDG_DATA_DIRS: $SNAP/share:$XDG_DATA_DIRS
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+      - home
+      - network
+      - raw-usb
+parts:
+  desktop-gtk2:
+    build-packages:
+      - build-essential
+      - libgtk2.0-dev
+    make-parameters:
+      - FLAVOR=gtk2
+    plugin: make
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: gtk
+    stage-packages:
+      - libxkbcommon0
+      - ttf-ubuntu-font-family
+      - dmz-cursor-theme
+      - light-themes
+      - adwaita-icon-theme
+      - gnome-themes-standard
+      - shared-mime-info
+      - libgtk2.0-0
+      - libgdk-pixbuf2.0-0
+      - libglib2.0-bin
+      - libgtk2.0-bin
+      - unity-gtk2-module
+      - locales-all
+      - libappindicator1
+      - xdg-user-dirs
+      - ibus-gtk
+      - libibus-1.0-5
+
+  xpd:
+    plugin: python
+    python-version: python2
+    source-type: svn
+    source: https://svn.code.sf.net/p/xpd-ebike/code/trunk
+    override-build: |
+      python setup.py build
+      snapcraftctl build
+    override-stage: |
+      snapcraftctl stage
+      SED_CMD="sed -i -E s|^Icon=(.*)|Icon=\${SNAP}/share/xpd/xpd.svg|g"
+      $SED_CMD share/applications/xpd.desktop
+    build-packages:
+      - gettext
+      - python-pip
+    stage-packages:
+      - python-gtk2
+      - python-serial
